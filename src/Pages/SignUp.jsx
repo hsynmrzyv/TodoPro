@@ -1,16 +1,16 @@
 // Images
 import Hero from "../Images/Hero.png";
-import SignInForm from "./SignInForm";
+import SignUpForm from "../Components/SignUpForm";
 
-const SignIn = () => {
+const SignUp = (props) => {
   return (
-    <div className="h-[500px] flex bg-cream p-2 rounded-lg">
+    <div className="h-[600px] flex bg-cream p-2 rounded-lg">
       <div className="flex flex-grow items-center justify-center">
         <img src={Hero} alt="" className="h-full" />
       </div>
-      <SignInForm />
+      <SignUpForm getUser={props.getUser} />
     </div>
   );
 };
 
-export default SignIn;
+export default SignUp;

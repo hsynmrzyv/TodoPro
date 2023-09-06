@@ -1,13 +1,58 @@
+// Hooks
+import { useRef } from "react";
+
+// Supabase
+import supabase from "../supabase";
+
+// Reacr Router
+import { useHistory } from "react-router-dom";
+
 const AddTodo = (props) => {
+  const contentRef = useRef();
+  const importanceRef = useRef();
+
+  const { replace } = useHistory();
+
+  const sendTodo = async (e) => {
+    e.preventDefault();
+
+    if (!contentRef.current.value || !importanceRef.current.value) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("Todos")
+      .insert({
+        content: contentRef.current.value,
+        importance: importanceRef.current.value,
+        userId: props.user.id,
+      })
+      .select();
+
+    if (error) {
+      console.log(error);
+    }
+
+    if (data) {
+      console.log(data);
+
+      contentRef.current.value = "";
+      importanceRef.current.value = "";
+
+      replace("/");
+    }
+  };
+
   return (
     <div className="mx-auto rounded-lg p-5 w-3/4 bg-dark">
       <h1 className="text-2xl mb-2 text-center">Add New Todo</h1>
-      <form className=" w-1/2 mx-auto ">
+      <form onSubmit={sendTodo} className=" w-1/2 mx-auto ">
         <div className="flex flex-col mb-2">
           <label htmlFor="content" className="mb-2">
             Content
           </label>
           <input
+            ref={contentRef}
             type="text"
             id="content"
             className="p-2 text-dark focus:outline-none"
@@ -18,6 +63,7 @@ const AddTodo = (props) => {
             Importance Level (Higher is more important)
           </label>
           <input
+            ref={importanceRef}
             type="number"
             id="content"
             min={1}

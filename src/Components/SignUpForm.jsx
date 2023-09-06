@@ -1,13 +1,27 @@
 // Hooks
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 // Icons
 import VisibleIcon from "../Icons/VisibleIcon";
 import HiddenIcon from "../Icons/HiddenIcon";
 
+// React Router
+import { Link, useHistory } from "react-router-dom";
+
+// Supabse
+import supabase from "../supabase";
+
 const SignupForm = (props) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const history = useHistory();
+
+  const nameRef = useRef();
+  const usernameRef = useRef();
+  const emailRef = useRef();
+  const passwordRef = useRef();
+  const confirmPasswordRef = useRef();
 
   const toggleShowPassword = (e) => {
     e.preventDefault();
@@ -17,6 +31,51 @@ const SignupForm = (props) => {
   const toggleShowConfirmPassword = (e) => {
     e.preventDefault();
     setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const signupHandler = async (e) => {
+    e.preventDefault();
+
+    if (
+      !nameRef.current.value ||
+      !usernameRef.current.value ||
+      !passwordRef.current.value ||
+      !emailRef.current.value ||
+      !confirmPasswordRef.current.value
+    ) {
+      return;
+    }
+
+    if (passwordRef.current.value !== confirmPasswordRef.current.value) {
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: emailRef.current.value,
+      password: passwordRef.current.value,
+      options: {
+        data: {
+          username: usernameRef.current.value,
+          fullname: nameRef.current.value,
+        },
+      },
+    });
+
+    if (error) {
+      console.log(error);
+    }
+
+    if (data) {
+      console.log(data);
+      const newUser = {
+        email: data.user.email,
+        id: data.user.id,
+        fullname: data.user.user_metadata.fullname,
+        username: data.user.user_metadata.username,
+      };
+      props.getUser(newUser);
+      history.replace("/");
+    }
   };
 
   return (
@@ -29,9 +88,10 @@ const SignupForm = (props) => {
         Please enter your details
       </p>
 
-      <form>
+      <form onSubmit={signupHandler}>
         <div className="w-full mb-5 border-b border-black">
           <input
+            ref={nameRef}
             type="text"
             placeholder="Fullname"
             className="inline-block w-full placeholder:text-black p-3 pl-0 text-sm focus:outline-none"
@@ -40,6 +100,7 @@ const SignupForm = (props) => {
 
         <div className="w-full mb-5 border-b border-black">
           <input
+            ref={usernameRef}
             type="text"
             placeholder="Username"
             className="inline-block w-full placeholder:text-black p-3 pl-0 text-sm focus:outline-none"
@@ -48,6 +109,7 @@ const SignupForm = (props) => {
 
         <div className="w-full mb-5 border-b border-black">
           <input
+            ref={emailRef}
             type="text"
             placeholder="Email"
             className="inline-block w-full placeholder:text-black p-3 pl-0 text-sm focus:outline-none"
@@ -56,6 +118,7 @@ const SignupForm = (props) => {
 
         <div className="w-full mb-5 flex items-center border-b border-black">
           <input
+            ref={passwordRef}
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             className="inline-block w-full placeholder:text-black p-3 pl-0 text-sm focus:outline-none"
@@ -67,6 +130,7 @@ const SignupForm = (props) => {
 
         <div className="w-full flex items-center border-b border-black">
           <input
+            ref={confirmPasswordRef}
             type={showConfirmPassword ? "text" : "password"}
             placeholder="Confirm Password"
             className="inline-block w-full placeholder:text-black p-3 pl-0 text-sm focus:outline-none"
@@ -77,12 +141,15 @@ const SignupForm = (props) => {
         </div>
       </form>
 
-      <button className="bg-dark text-white w-full py-2 rounded-full mt-4 border-black border-2 hover:bg-white hover:text-black transition-all duration-200">
+      <button
+        onClick={signupHandler}
+        className="bg-dark text-white w-full py-2 rounded-full mt-4 border-black border-2 hover:bg-white hover:text-black transition-all duration-200"
+      >
         Sign Up
       </button>
 
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px]">
-        Already have an account? <span to="/sign-in">Sign In</span>
+        Already have an account? <Link to="/sign-in">Sign In</Link>
       </div>
     </div>
   );

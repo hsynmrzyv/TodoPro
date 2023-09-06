@@ -3,14 +3,53 @@ import VisibleIcon from "../Icons/VisibleIcon";
 import HiddenIcon from "../Icons/HiddenIcon";
 
 // Hooks
-import { useState } from "react";
+import { useState, useRef } from "react";
 
-const SignupForm = () => {
+// React Router
+import { Link, useHistory } from "react-router-dom";
+
+// Supabase
+import supabase from "../supabase";
+
+const SignupForm = (props) => {
   const [showPassword, setShowPassword] = useState(false);
+
+  const { replace } = useHistory();
+
+  const emailRef = useRef();
+  const passwordRef = useRef();
 
   const toggleShowPassword = (e) => {
     e.preventDefault();
     setShowPassword(!showPassword);
+  };
+
+  const signInHandler = async (e) => {
+    e.preventDefault();
+
+    if (!emailRef.current.value || !passwordRef.current.value) {
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: emailRef.current.value,
+      password: passwordRef.current.value,
+    });
+
+    if (error) {
+      console.log(error);
+    }
+
+    if (data) {
+      const newUser = {
+        email: data.user.email,
+        id: data.user.id,
+        fullname: data.user.user_metadata.fullname,
+        username: data.user.user_metadata.username,
+      };
+      props.getUser(newUser);
+      replace("/");
+    }
   };
 
   return (
@@ -19,9 +58,10 @@ const SignupForm = () => {
       <p className="text-xs font-light mb-10 text-center">
         Please enter your details
       </p>
-      <form>
+      <form onSubmit={signInHandler}>
         <div className="w-full mb-5 border-b border-black">
           <input
+            ref={emailRef}
             type="text"
             placeholder="Email"
             className="inline-block w-full placeholder:text-black p-3 pl-0 text-sm focus:outline-none"
@@ -29,6 +69,7 @@ const SignupForm = () => {
         </div>
         <div className="w-full flex items-center border-b border-black">
           <input
+            ref={passwordRef}
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             className="inline-block w-full placeholder:text-black p-3 pl-0 text-sm focus:outline-none"
@@ -47,11 +88,14 @@ const SignupForm = () => {
         </div>
         <p className="text-gray-400 capitalize">forgot password?</p>
       </div>
-      <button className="bg-dark text-white w-full py-2 rounded-full border-black border-2 hover:bg-white hover:text-black transition-all duration-200">
+      <button
+        onClick={signInHandler}
+        className="bg-dark text-white w-full py-2 rounded-full border-black border-2 hover:bg-white hover:text-black transition-all duration-200"
+      >
         Sign In
       </button>
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px]">
-        Don't have an account <span>Sign Up</span>
+        Don't have an account <Link to="/sign-up">Sign Up</Link>
       </div>
     </div>
   );
